@@ -3,18 +3,24 @@
   <head>
     <meta charset="UTF-8">
     <title>Exemplo de Captura de Áudio</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   </head>
   <body>
+    <img id="recording-icon" src="Mic.gif" style="display: none;">
     <form>
-        
+
       <button id="record">Gravar Áudio</button>
       <button id="pause" disabled>Pausar Gravação</button>
       <button id="resume" disabled>Retomar Gravação</button>
       <button id="stop" disabled >Encerrar Gravação</button>
+      <button id="send" disabled>Enviar Áudio</button>
       <audio id="player" controls></audio>
     </form>
 
     <script>
+
+        let accessToken = null;
+
         document.querySelector('form').addEventListener('submit', function(e) {
         e.preventDefault();
 });
@@ -24,6 +30,7 @@
       const resumeBtn = document.getElementById('resume');
       const stopBtn = document.getElementById('stop');
       const player = document.getElementById('player');
+      
     
 
       navigator.mediaDevices.getUserMedia({ audio: true })
@@ -56,6 +63,7 @@
         recordBtn.textContent = 'Parar Gravação';
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
+        document.getElementById('recording-icon').style.display = 'block';
       }
 
       function pauseRecording() {
@@ -80,19 +88,20 @@
         pauseBtn.disabled = true;
         resumeBtn.disabled = true;
         stopBtn.disabled = true;
-        mediaRecorder.requestData();
-        chunks = [];
-        mediaRecorder.ondataavailable = function(event) {
-            const audioBlob = new Blob([event.data], { 'type' : 'audio/ogg; codecs=opus' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const downloadLink = document.createElement('a');
-            downloadLink.href = audioUrl;
-            downloadLink.download = 'gravacao.ogg';
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-        }
-        }
+        document.getElementById('recording-icon').style.display = 'none';
+  
+        mediaRecorder.onstop = function(event) {
+        const audioBlob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = audioUrl;
+        downloadLink.download = 'gravacao.ogg';
+        downloadLink.type = 'audio/ogg';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+  }
+}
 
     </script>
   </body>
