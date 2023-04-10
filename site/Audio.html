@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Exemplo de Captura de Áudio</title>
+  </head>
+  <body>
+    <form>
+        
+      <button id="record">Gravar Áudio</button>
+      <button id="pause" disabled>Pausar Gravação</button>
+      <button id="resume" disabled>Retomar Gravação</button>
+      <button id="stop" disabled >Encerrar Gravação</button>
+      <audio id="player" controls></audio>
+    </form>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+});
+      let mediaRecorder, chunks = [];
+      const recordBtn = document.getElementById('record');
+      const pauseBtn = document.getElementById('pause');
+      const resumeBtn = document.getElementById('resume');
+      const stopBtn = document.getElementById('stop');
+      const player = document.getElementById('player');
+    
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+          mediaRecorder = new MediaRecorder(stream);
+          console.log("Microfone acessado com sucesso!");
+
+          recordBtn.addEventListener('click', startRecording);
+          pauseBtn.addEventListener('click', pauseRecording);
+          resumeBtn.addEventListener('click', resumeRecording);
+          stopBtn.addEventListener('click', stopRecording);
+
+          mediaRecorder.addEventListener('dataavailable', function(event) {
+            chunks.push(event.data);
+          });
+
+          mediaRecorder.addEventListener('stop', function() {
+            const audioBlob = new Blob(chunks);
+            const audioUrl = URL.createObjectURL(audioBlob);
+            player.src = audioUrl;
+          });
+        })
+        .catch(function(err) {
+          console.log('Ocorreu um erro ao acessar o microfone: ' + err);
+        });
+
+      function startRecording() {
+        mediaRecorder.start();
+        console.log("Está gravando...");
+        recordBtn.textContent = 'Parar Gravação';
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
+      }
+
+      function pauseRecording() {
+        mediaRecorder.pause();
+        console.log("Está pausado...");
+        pauseBtn.disabled = true;
+        resumeBtn.disabled = false;
+      }
+
+      function resumeRecording() {
+        mediaRecorder.resume();
+        console.log("Está retomado...");
+        pauseBtn.disabled = false;
+        resumeBtn.disabled = true;
+      }
+
+      function stopRecording(event) {
+        event.preventDefault();
+        mediaRecorder.stop();
+        console.log("Gravação encerrada.");
+        recordBtn.textContent = 'Gravar Áudio';
+        pauseBtn.disabled = true;
+        resumeBtn.disabled = true;
+        stopBtn.disabled = true;
+        mediaRecorder.requestData();
+        chunks = [];
+        mediaRecorder.ondataavailable = function(event) {
+            const audioBlob = new Blob([event.data], { 'type' : 'audio/ogg; codecs=opus' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = audioUrl;
+            downloadLink.download = 'gravacao.ogg';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+        }
+
+    </script>
+  </body>
+</html>
